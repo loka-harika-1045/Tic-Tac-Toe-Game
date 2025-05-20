@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic-Tac-Toe Game </title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #ffd6ec, #d9a7eb);
+      padding: 20px;
+    }
+
+    h1 {
+      color: #800080;
+      margin-bottom: 10px;
+    }
+
+    .emoji {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .mode-select {
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #fff0f5;
+      border: 2px solid #da70d6;
+      border-radius: 10px;
+      font-size: 2rem;
+      color: #800080;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .cell:hover {
+      background-color: #ffe0f0;
+    }
+
+    #status {
+      font-size: 1.2rem;
+      color: #800080;
+      margin: 15px 0;
+    }
+
+    button {
+      background-color: #ffb6c1;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #800080;
+    }
+
+    button:hover {
+      background-color: #ffc8dd;
+    }
+
+    @media (max-width: 500px) {
+      .board {
+        grid-template-columns: repeat(3, 80px);
+      }
+
+      .cell {
+        width: 80px;
+        height: 80px;
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1> Tic-Tac-Toe </h1>
+  <div class="emoji">❌⭕🎮</div>
+  <div class="mode-select">
+    <label for="mode">Select Mode:</label>
+    <select id="mode" onchange="resetGame()">
+      <option value="one">One Player (vs Computer)</option>
+      <option value="two">Two Player</option>
+    </select>
+  </div>
+  <div class="board" id="board"></div>
+  <div id="status">Player X's Turn</div>
+  <button onclick="resetGame()">Restart Game</button>
+
+  <script>
+    const boardElement = document.getElementById("board");
+    const statusElement = document.getElementById("status");
+    const modeSelect = document.getElementById("mode");
+
+    let board = Array(9).fill("");
+    let currentPlayer = "X";
+    let gameActive = true;
+
+    function createBoard() {
+      boardElement.innerHTML = "";
+      board.forEach((cell, index) => {
+        const cellEl = document.createElement("div");
+        cellEl.className = "cell";
+        cellEl.dataset.index = index;
+        cellEl.textContent = cell;
+        cellEl.addEventListener("click", handleClick);
+        boardElement.appendChild(cellEl);
+      });
+    }
+
+    function handleClick(e) {
+      const index = e.target.dataset.index;
+      if (!gameActive || board[index] !== "") return;
+
+      makeMove(index, currentPlayer);
+
+      if (!gameActive) return;
+
+      if (modeSelect.value === "one" && currentPlayer === "O") {
+        setTimeout(computerMove, 500);
+      }
+    }
+
+    function makeMove(index, player) {
+      board[index] = player;
+      createBoard();
+
+      if (checkWinner(board, player)) {
+        statusElement.textContent = `${player} Wins! 🎉`;
+        gameActive = false;
+      } else if (!board.includes("")) {
+        statusElement.textContent = "It's a Draw!";
+        gameActive = false;
+      } else {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        statusElement.textContent = `Player ${currentPlayer}'s Turn`;
+      }
+    }
+
+    function computerMove() {
+      const empty = board.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+
+      // 50% of time, play strategically
+      if (Math.random() < 0.5) {
+        for (let i of empty) {
+          let temp = [...board];
+          temp[i] = "O";
+          if (checkWinner(temp, "O")) return makeMove(i, "O");
+        }
+
+        for (let i of empty) {
+          let temp = [...board];
+          temp[i] = "X";
+          if (checkWinner(temp, "X")) return makeMove(i, "O");
+        }
+
+        if (board[4] === "") return makeMove(4, "O");
+
+        const corners = [0,2,6,8].filter(i => board[i] === "");
+        if (corners.length > 0) {
+          const randCorner = corners[Math.floor(Math.random() * corners.length)];
+          return makeMove(randCorner, "O");
+        }
+      }
+
+      const rand = empty[Math.floor(Math.random() * empty.length)];
+      makeMove(rand, "O");
+    }
+
+    function checkWinner(b, p) {
+      const wins = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return wins.some(pattern => pattern.every(i => b[i] === p));
+    }
+
+    function resetGame() {
+      board = Array(9).fill("");
+      currentPlayer = "X";
+      gameActive = true;
+      statusElement.textContent = `Player ${currentPlayer}'s Turn`;
+      createBoard();
+
+      if (modeSelect.value === "one" && currentPlayer === "O") {
+        setTimeout(computerMove, 500);
+      }
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
